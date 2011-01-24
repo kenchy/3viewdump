@@ -11,13 +11,13 @@ which I have adapted to my purposes. Thanks to the original author.
 
 Usage:
 
-install Net::UPNP and Date::Manip 
+install Net::UPNP, curl and ffmpeg
 
-./3viewdump.pl -s "Case Sensitive Search String" -a <Date of recording YYYYMMDD> name_of_rss_file
+./3viewdump.pl -s "Case Sensitive Search String" -a <Date of recording YYYYMMDD>
 
 example:
 
-./3viewdump.pl -s Peppa -a 20101220 test.rss
+./3viewdump.pl -s Peppa -a 20101220
 will download all of the Peppas from the 20th December 2010, (there are a lot of them)
 
 DONE:
@@ -25,9 +25,10 @@ Can query 3view server on local LAN, not sure if this will currently work with o
 Will download all hits
 
 ISSUES:
-Command requires an RSS file to output to. This will be removed. As the code is there, will
-make an option so you can generate a page of links to content on the 3view.
 Lots of cruft.
 SD Files need to be run through ffmpeg to make them easily playable.
 Same issue with HD files but ffmpeg doesn't fix them.
-Downloads files twice, possibly hitting them from the 'order by title'and 'order by date'
+Downloads files twice, hitting them from the 'order by title'and 'order by date'
+
+TODO:
+Don't download files generate an RSS feed with links to the server.
