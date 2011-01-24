@@ -5,11 +5,6 @@ use Net::UPnP::AV::MediaServer;
 
 use Shell qw(curl ffmpeg);
 use Data::Dumper;
-#use Date::Format;
-#use Date::Parse;
-#use Date::Manip;
-#use Date::Calc;
-#use HTTP::Date qw(parse_date time2str); 
 
 #curl('--version');
 #ffmpeg('-version');
@@ -36,7 +31,7 @@ $script_version = '0.1';
 $base_directory = "./";
 $rss_description = "RSS of 3view Programs";
 $rss_link= "";
-$rss_title = "3 view RSS";
+$rss_title = "3view RSS";
 $requested_count = 0;
 $rss_file = "";
 $title_regexp = "";
@@ -44,7 +39,7 @@ $search_date = "";
  
 @command_opt = (
 ['-a', '--date', 'date string', 'The date string to parse for format yyyymmddhh_mm_ss'],
-['-B', '--base-directory', '<url>', 'Set the base directory to output the RSS file and the MPEG4 files'],
+['-B', '--base-directory', '/path/to/', 'Set the base directory to output the RSS file and the MPEG4 files'],
 ['-d', '--rss-description', '<description>', 'Set the description tag in the output RSS file'],
 ['-h', '--help', '', 'This is help text.'],
 ['-l', '--rss-link', '<link>', 'Set the link tag in the output RSS file'],
@@ -65,7 +60,7 @@ sub is_command_option {
 }
 
 #------------------------------
-# main (pase command line)
+# main (parse command line)
 #------------------------------
 
 for ($i=0; $i<(@ARGV); $i++) {
@@ -123,7 +118,6 @@ for ($i=0; $i<(@ARGV); $i++) {
 }
 
 print "  $program_name (v$script_version), $copy_right\n";
-print "  Output RSS file name = $rss_filename\n";
 print "  title : $rss_title\n";
 print "  description : $rss_description\n";
 print "  base directory : $base_directory\n";
@@ -167,11 +161,13 @@ foreach $dev (@dev_list) {
 	$mediaServer = Net::UPnP::AV::MediaServer->new();
 	$mediaServer->setdevice($dev);
 	#@content_list = $mediaServer->getcontentlist(ObjectID => 0, RequestedCount => $requested_count);
-	@content_list = $mediaServer->getcontentlist(ObjectID => 0);
+	#@content_list = $mediaServer->getcontentlist(ObjectID => 0);
+	@content_list = $mediaServer->getcontentlist(ObjectID => 21);
 	#print "content_list = @content_list\n";
 	foreach $content (@content_list) {
 		print "content $content->{_title} \n";
-		if ( $content->{_title} eq 'Video' ) {
+		print Dumper $content;
+		if ( $content->{_title} eq 'By Program Name' ) {
 			parse_content_directory($mediaServer, $content);
 		}
 	}
@@ -205,15 +201,15 @@ print RSS_FILE $rss_header;
 foreach $content (@dms_content_list){
 	$title = $content->{'title'};	
 	$fname = $content->{'file_name'};
-	$fsize = $content->{'file_size'};
+	#$fsize = $content->{'file_size'};
+	$ulink = $content->{'file_url'};
 
-#$mp4_link = $rss_base_url . $fname;
-$mp4_link = $fname;
+$mp4_link = $ulink;
 $mp4_item = <<"RSS_MP4_ITEM";
 <item>
 <title>$title</title>
 <guid isPermalink="false">$mp4_link</guid>
-<enclosure url="$mp4_link" length="$fsize" type="video/mp4" />
+<enclosure url="$mp4_link" type="video/mpeg" />
 </item>
 RSS_MP4_ITEM
 	print RSS_FILE $mp4_item;
@@ -312,7 +308,7 @@ sub get_content {
 	my $post_file_name = $filename_body . ".mpeg";
 	my $output_file_name = $base_directory . $post_file_name;
 
-	if (!(-e $output_file_name)) {	
+	if ((!(-e $output_file_name))&&($rss_file eq "")) {	
 		$curl_opt = "\"$url\" -o \"$raw_file_name\"";
 		print "curl $curl_opt\n";
 		curl($curl_opt);
@@ -325,21 +321,21 @@ sub get_content {
 		unlink($raw_file_name);
 	}
 		
-	if (!(-e $output_file_name)) {	
-		return undef;
-	}
+	#if (!(-e $output_file_name)) {	
+	#	return undef;
+	#}
 	
-	my $post_file_size = -s $output_file_name;
+	#my $post_file_size = -s $output_file_name;
 	
-	if ($post_file_size <= 0) {
-		return undef;
-	}
+	#if ($post_file_size <= 0) {
+	#	return undef;
+	#}
 		
 	my %info = (
 		'objid' => $objid,
-		'title' => $title,
+		'title' => "$filename_body",
 		'file_name' => $post_file_name,
-		'file_size' => $post_file_size,
+		#'file_size' => $post_file_size,
 		'file_url'  => $url,
 	);
 	
