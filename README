@@ -1,0 +1,33 @@
+v0.1 24/01/2011
+
+This program results from a search for a method to download programs from my 3view Freeview HD recorder.
+The recorder exposes all of the recordings using UPNP.
+People were coming up with mechanisms using windows media player, and chunks of HTML.
+
+I don't really use windows, and I don't want to use a browser to do this.
+
+I cam across the Net::UPNP perl class which includes an example called dms2vodcast,
+which I have adapted to my purposes. Thanks to the original author.
+
+Usage:
+
+install Net::UPNP and Date::Manip 
+
+./3viewdump.pl -s "Case Sensitive Search String" -a <Date of recording YYYYMMDD> name_of_rss_file
+
+example:
+
+./3viewdump.pl -s Peppa -a 20101220 test.rss
+will download all of the Peppas from the 20th December 2010, (there are a lot of them)
+
+DONE:
+Can query 3view server on local LAN, not sure if this will currently work with other UPNP servers
+Will download all hits
+
+ISSUES:
+Command requires an RSS file to output to. This will be removed. As the code is there, will
+make an option so you can generate a page of links to content on the 3view.
+Lots of cruft.
+SD Files need to be run through ffmpeg to make them easily playable.
+Same issue with HD files but ffmpeg doesn't fix them.
+Downloads files twice, possibly hitting them from the 'order by title'and 'order by date'
