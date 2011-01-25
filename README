@@ -25,15 +25,15 @@ will download all of the Peppa Pigs from the 20th December 2010, (there are a lo
 will create an rss file with links to all of the Peppa Pigs from the 20th December 2010
 
 Note on ffmpeg:
-Once the file is downloaded, it is then passed through ffmpeg, with -acodec=copy and -vodec=copy I find this makes the file easier to play.
+SD files are easier to play if they are passed through ffmpeg, with -acodec=copy and -vodec=copy I find this makes the file easier to play.
+HD files get mangled by ffmpeg, so they are just downloaded raw. I have not found any file metadata that tells me whether a file is HD or SD, so I parse the url of the program for the string 'cofdm_8k-', SD files contain the string 'cofdm_2k-'.
 
 DONE:
 Functions as expected.
 
 ISSUES:
 Lots of cruft.
-SD Files need to be run through ffmpeg to make them easily playable.
-Same issue with HD files but ffmpeg doesn't always fix them.
+Find a way to 'fix' HD files, this will probably mean waiting for the h264 support in ffmpeg to improve.
 
 TODO:
 Improve search

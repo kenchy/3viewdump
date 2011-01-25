@@ -290,6 +290,7 @@ sub get_content {
 	$date =~ tr/0-9//cd;
 
 	my $url = $content->geturl();
+	my $mime = $content->{_contenttype};
 	
 	#print "[$objid] $title date: $date ($url)\n";
 	
@@ -314,11 +315,15 @@ sub get_content {
 		curl($curl_opt);
 
 		$ffmpeg_opt = "-y -i \"$raw_file_name\" -acodec copy -vcodec copy \"$output_file_name\"";
-	
-		print "ffmpeg $ffmpeg_opt\n";
-		ffmpeg($ffmpeg_opt);
-		
-		unlink($raw_file_name);
+		if ( isitHD($content)){
+			#print "It is HD!!!\n";
+			rename $raw_file_name, $output_file_name;
+		} else {
+			#print "It is  not HD!!!!\n";
+			print "ffmpeg $ffmpeg_opt\n";
+			ffmpeg($ffmpeg_opt);
+			unlink($raw_file_name);
+		}
 	}
 		
 	#if (!(-e $output_file_name)) {	
@@ -341,6 +346,21 @@ sub get_content {
 	);
 	
 	return \%info;
+}
+
+#------------------------------
+# is it HD
+#------------------------------
+sub isitHD {
+	#returns 1 if it is HD
+	my $hdcontent = shift;
+	my $urlre = 'cofdm_8k-';
+	my $url = $hdcontent->geturl();
+	if ( $url =~ m/$urlre/ ) {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 exit 0;
