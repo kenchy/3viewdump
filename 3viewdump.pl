@@ -175,21 +175,27 @@ foreach $dev (@dev_list) {
 
 	$devNum++;
 }
+if (length($rss_file) > 0 ) {
+	make_rss(@dms_content_list);
+}
+exit 0;
 
 #------------------------------
 # Output RSS file
 #------------------------------
+sub make_rss {
 
-if (@dms_content_list <= 0) {
-	print "Couldn't find video contents !!\n";
-	exit 1;
-}
+	@rss_content_list = @_;
+	if ( @rss_content_list <= 0 ) {	
+		print "Couldn't find video contents !!\n";
+		exit 1;
+	}
 
-$output_rss_filename = $base_directory . $rss_file;
+	$output_rss_filename = $base_directory . $rss_file;
 
-open(RSS_FILE, ">$output_rss_filename") || die "Couldn't open the specifed output file($output_rss_filename)\n";
+	open(RSS_FILE, ">$output_rss_filename") || die "Couldn't open the specifed output file($output_rss_filename)\n";
 
-$rss_header = <<"RSS_HEADER";
+	$rss_header = <<"RSS_HEADER";
 <?xml version="1.0" encoding="utf-8"?>
 <rss xmlns:itunes="http://www.itunes.com/DTDs/Podcast-1.0.dtd" version="2.0">
 <channel>
@@ -197,36 +203,37 @@ $rss_header = <<"RSS_HEADER";
 <description>$rss_description</description>
 <link>$rss_link</link>
 RSS_HEADER
-print RSS_FILE $rss_header;
+	print RSS_FILE $rss_header;
 
-foreach $content (@dms_content_list){
-	$title = $content->{'title'};	
-	$fname = $content->{'file_name'};
-	#$fsize = $content->{'file_size'};
-	$ulink = $content->{'file_url'};
-	$umime = $content->{'file_mime'};
+	foreach $content (@rss_content_list){
+		$title = $content->{'title'};	
+		$fname = $content->{'file_name'};
+		#$fsize = $content->{'file_size'};
+		$ulink = $content->{'file_url'};
+		$umime = $content->{'file_mime'};
 
-$mp4_link = $ulink;
-$mp4_item = <<"RSS_MP4_ITEM";
+	$mp4_link = $ulink;
+	$mp4_item = <<"RSS_MP4_ITEM";
 <item>
 <title>$title</title>
 <guid isPermalink="false">$mp4_link</guid>
 <enclosure url="$mp4_link" type="$umime" />
 </item>
 RSS_MP4_ITEM
-	print RSS_FILE $mp4_item;
-}
+		print RSS_FILE $mp4_item;
+	}
 
-$rss_footer = <<"RSS_FOOTER";
+	$rss_footer = <<"RSS_FOOTER";
 </channel>
 </rss>
 RSS_FOOTER
-print RSS_FILE $rss_footer;
+	print RSS_FILE $rss_footer;
 
 	close(RSS_FILE);
 
-$rss_outputed_items = @dms_content_list;
-print "Outputed $rss_outputed_items RSS items to $output_rss_filename\n";
+	$rss_outputted_items = @rss_content_list;
+	print "Outputed $rss_outputted_items RSS items to $output_rss_filename\n";
+}
 
 #------------------------------
 # parse_content_directory
@@ -363,5 +370,4 @@ sub isitHD {
 	}
 }
 
-exit 0;
 

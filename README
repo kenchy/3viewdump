@@ -11,7 +11,7 @@ which I have adapted to my purposes. Thanks to the original author.
 
 Usage:
 
-install Net::UPNP, curl and ffmpeg
+install Net::UPNP (in debian libnet-upnp-perl), curl and ffmpeg
 some of the debug needs Data::Dumper
 
 ./3viewdump.pl -s "Case Sensitive Search String" -a <Date of recording YYYYMMDD> [-f 'rss output file']
@@ -38,5 +38,4 @@ Find a way to 'fix' HD files, this will probably mean waiting for the h264 suppo
 TODO:
 Improve search
 remove debug
-Move RSS code to a function
 Generate plain HTML instead of RSS?
