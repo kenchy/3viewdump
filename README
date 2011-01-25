@@ -24,6 +24,9 @@ will download all of the Peppa Pigs from the 20th December 2010, (there are a lo
 ./3viewdump.pl -s Peppa -a 20101220 -f peppa.rss
 will create an rss file with links to all of the Peppa Pigs from the 20th December 2010
 
+Note on ffmpeg:
+Once the file is downloaded, it is then passed through ffmpeg, with -acodec=copy and -vodec=copy I find this makes the file easier to play.
+
 DONE:
 Functions as expected.
 

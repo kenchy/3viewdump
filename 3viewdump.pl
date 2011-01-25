@@ -16,7 +16,7 @@ use Data::Dumper;
 $program_name = '3viewdump';
 $copy_right = 'parts Copyright (c) 2005 Satoshi Konno';
 $script_name = '3viewdump.pl';
-$script_version = '0.1';
+$script_version = '0.2';
 
 #------------------------------
 # global variables
@@ -139,14 +139,14 @@ while ( $retry_cnt < 2) {
 	@dev_list = $obj->search(st =>'upnp:rootdevice', mx => 3);
 #	@dev_list = $obj->search();
 	#print Dumper (@dev_list);
-	print "$retry_cnt \n";
+	#print "$retry_cnt \n";
 	$retry_cnt++;
 } 
 
 $devNum= 0;
 foreach $dev (@dev_list) {
 	$device_type = $dev->getdevicetype();
-	print "$device_type \n";
+	#print "$device_type \n";
 	#print "Device type is $device_type \n";
 	#print Dumper $dev->getservicebyname('urn:schemas-upnp-org:service:ContentDirectory:1');
 	#print "\n\n\n\n";
@@ -161,11 +161,12 @@ foreach $dev (@dev_list) {
 	$mediaServer = Net::UPnP::AV::MediaServer->new();
 	$mediaServer->setdevice($dev);
 	#@content_list = $mediaServer->getcontentlist(ObjectID => 0, RequestedCount => $requested_count);
-	#@content_list = $mediaServer->getcontentlist(ObjectID => 0);
+	#The 'folders' presented by the 3view are represented by ObjectID, 0 will return the 3 top level directories
+	#'Video' has an ObjectID of 2, 'Recorded Shows' is 21, 'By Title' is 211
 	@content_list = $mediaServer->getcontentlist(ObjectID => 21);
 	#print "content_list = @content_list\n";
 	foreach $content (@content_list) {
-		print "content $content->{_title} \n";
+		#print "content $content->{_title} \n";
 		#print Dumper $content;
 		if ( $content->{_title} eq 'By Program Name' ) {
 			parse_content_directory($mediaServer, $content);
@@ -203,13 +204,14 @@ foreach $content (@dms_content_list){
 	$fname = $content->{'file_name'};
 	#$fsize = $content->{'file_size'};
 	$ulink = $content->{'file_url'};
+	$umime = $content->{'file_mime'};
 
 $mp4_link = $ulink;
 $mp4_item = <<"RSS_MP4_ITEM";
 <item>
 <title>$title</title>
 <guid isPermalink="false">$mp4_link</guid>
-<enclosure url="$mp4_link" type="video/mpeg" />
+<enclosure url="$mp4_link" type="$umime" />
 </item>
 RSS_MP4_ITEM
 	print RSS_FILE $mp4_item;
@@ -238,16 +240,17 @@ sub parse_content_directory {
 	if ($content->isitem()) {
 		#my $title = $content->gettitle();
 		my $title = $content->{_title};
-		$title =~ tr/a-zA-Z0-9/_/cd;
+		#$title =~ tr/a-zA-Z0-9/_/cd;
 		#my $date = ParseDate($content->{_date});
 		my $date = $content->{_date};
 		$date =~ tr/0-9//cd;
-		print "title: $title \n";
 		my $mime = $content->{_contenttype};
-		print "mime: $mime \n";
-		print "date: $date search_date $search_date";
 		if ( ($mime =~ m/video/) && ( (length($title_regexp) == 0) || ($title =~ m/$title_regexp/) ) ) {
 			if ((length($search_date) == 0) || ($date =~ m/$search_date/)) {
+				print "title: $title ";
+				print "mime: $mime ";
+				print "date: $date search_date $search_date\n";
+				#print Dumper $content;
 				my $dms_content_count = @dms_content_list;
 				if ($requested_count == 0 || $dms_content_count < $requested_count) {
 					my $mp4_content = get_content($mediaServer, $content);
@@ -280,14 +283,11 @@ sub parse_content_directory {
 
 sub get_content {
 	($mediaServer, $content) = @_;
-	#print Dumper $content;
 	my $objid = $content->getid();
 	my $title = $content->gettitle();
 	$title =~ tr/a-zA-Z0-9/_/c;
-	#my @date = parse_date($content->{_date});
-	#my $date = ParseDate($content->{_date});
 	my $date = $content->{_date};
-	$date =~ tr/a-zA-Z0-9/_/c;
+	$date =~ tr/0-9//cd;
 
 	my $url = $content->geturl();
 	
@@ -332,11 +332,12 @@ sub get_content {
 	#}
 		
 	my %info = (
-		'objid' => $objid,
-		'title' => "$filename_body",
+		'objid'     => $objid,
+		'title'     => "$filename_body",
 		'file_name' => $post_file_name,
 		#'file_size' => $post_file_size,
 		'file_url'  => $url,
+		'file_mime' => $mime,
 	);
 	
 	return \%info;
