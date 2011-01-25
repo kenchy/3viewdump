@@ -166,7 +166,7 @@ foreach $dev (@dev_list) {
 	#print "content_list = @content_list\n";
 	foreach $content (@content_list) {
 		print "content $content->{_title} \n";
-		print Dumper $content;
+		#print Dumper $content;
 		if ( $content->{_title} eq 'By Program Name' ) {
 			parse_content_directory($mediaServer, $content);
 		}

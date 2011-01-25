@@ -1,4 +1,4 @@
-v0.1 24/01/2011
+v0.2 25/01/2011
 
 This program results from a search for a method to download programs from my 3view Freeview HD recorder.
 The recorder exposes all of the recordings using UPNP.
@@ -6,28 +6,34 @@ People were coming up with mechanisms using windows media player, and chunks of 
 
 I don't really use windows, and I don't want to use a browser to do this.
 
-I cam across the Net::UPNP perl class which includes an example called dms2vodcast,
+I came across the Net::UPNP perl class which includes an example called dms2vodcast,
 which I have adapted to my purposes. Thanks to the original author.
 
 Usage:
 
 install Net::UPNP, curl and ffmpeg
+some of the debug needs Data::Dumper
 
-./3viewdump.pl -s "Case Sensitive Search String" -a <Date of recording YYYYMMDD>
+./3viewdump.pl -s "Case Sensitive Search String" -a <Date of recording YYYYMMDD> [-f 'rss output file']
 
 example:
 
 ./3viewdump.pl -s Peppa -a 20101220
-will download all of the Peppas from the 20th December 2010, (there are a lot of them)
+will download all of the Peppa Pigs from the 20th December 2010, (there are a lot of them)
+
+./3viewdump.pl -s Peppa -a 20101220 -f peppa.rss
+will create an rss file with links to all of the Peppa Pigs from the 20th December 2010
 
 DONE:
-Can query 3view server on local LAN, not sure if this will currently work with other UPNP servers
-Will download all hits
+Functions as expected.
 
 ISSUES:
 Lots of cruft.
 SD Files need to be run through ffmpeg to make them easily playable.
-Same issue with HD files but ffmpeg doesn't fix them.
+Same issue with HD files but ffmpeg doesn't always fix them.
 
 TODO:
-Give option to not download files but generate an RSS feed with links to the server.
+Improve search
+remove debug
+Move RSS code to a function
+Generate plain HTML instead of RSS?
