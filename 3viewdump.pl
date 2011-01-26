@@ -3,8 +3,10 @@
 use Net::UPnP::ControlPoint;
 use Net::UPnP::AV::MediaServer;
 
-use Shell qw(curl ffmpeg);
+use Shell qw(ffmpeg);
 use Data::Dumper;
+
+use File::Fetch;
 
 #curl('--version');
 #ffmpeg('-version');
@@ -36,6 +38,8 @@ $requested_count = 0;
 $rss_file = "";
 $title_regexp = "";
 $search_date = "";
+$nopost = 0;
+$File::Fetch::BLACKLIST = [qw|netftp curl wget|];
  
 @command_opt = (
 ['-a', '--date', 'date string', 'The date string to parse for format yyyymmddhh_mm_ss'],
@@ -43,6 +47,7 @@ $search_date = "";
 ['-d', '--rss-description', '<description>', 'Set the description tag in the output RSS file'],
 ['-h', '--help', '', 'This is help text.'],
 ['-l', '--rss-link', '<link>', 'Set the link tag in the output RSS file'],
+['-n', '--nopost', '', 'Do not do any post-processing using ffmpeg (SD files only)'],
 ['-r', '--requested-count', '<number>', 'Set the max request count to the media server contents'],
 ['-t', '--rss-title', '<file>', 'Set the title tag in the output RSS file'],
 ['-f', '--rss-file', '<file>', 'RSS filename'],
@@ -104,6 +109,8 @@ for ($i=0; $i<(@ARGV); $i++) {
 		$rss_description = $ARGV[++$i];
 	} elsif ($opt_short_name eq '-l') {
 		$rss_link = $ARGV[++$i];
+	} elsif ($opt_short_name eq '-n') {
+		$nopost = 1;
 	} elsif ($opt_short_name eq '-r') {
 		$requested_count = $ARGV[++$i];
 	} elsif ($opt_short_name eq '-t') {
@@ -312,17 +319,15 @@ sub get_content {
 	$filename_body =~ s/ //g;
 	$filename_body =~ s/\//-/g;
 	
-	my $raw_file_name = $filename_body . ".mpeg.tmp";
+	#my $raw_file_name = $filename_body . ".mpeg.tmp";
 	my $post_file_name = $filename_body . ".mpeg";
 	my $output_file_name = $base_directory . $post_file_name;
 
 	if ((!(-e $output_file_name))&&($rss_file eq "")) {	
-		$curl_opt = "\"$url\" -o \"$raw_file_name\"";
-		print "curl $curl_opt\n";
-		curl($curl_opt);
-
+		my $ff = File::Fetch->new( uri => $url );
+		my $raw_file_name = $ff->fetch();
 		$ffmpeg_opt = "-y -i \"$raw_file_name\" -acodec copy -vcodec copy \"$output_file_name\"";
-		if ( isitHD($content)){
+		if (( isitHD($content))||($nopost)) {
 			#print "It is HD!!!\n";
 			rename $raw_file_name, $output_file_name;
 		} else {

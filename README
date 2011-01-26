@@ -1,4 +1,4 @@
-v0.2 25/01/2011
+v0.3 26/01/2011
 
 This program results from a search for a method to download programs from my 3view Freeview HD recorder.
 The recorder exposes all of the recordings using UPNP.
@@ -11,21 +11,23 @@ which I have adapted to my purposes. Thanks to the original author.
 
 Usage:
 
-install Net::UPNP (in debian libnet-upnp-perl), curl and ffmpeg
-some of the debug needs Data::Dumper
+install Net::UPNP (in debian libnet-upnp-perl), and ffmpeg (optional see --nopost)
+some of the debug needs Data::Dumper.
+Originally the file download needed the curl utility, I have switched this to the perl core module File::Fetch, this should use the LWP module, if not it will fall back curl or wget.
 
 ./3viewdump.pl -s "Case Sensitive Search String" -a <Date of recording YYYYMMDD> [-f 'rss output file']
 
 example:
 
-./3viewdump.pl -s Peppa -a 20101220
+./3viewdump.pl -s Peppa -a 20101220 [-n]
 will download all of the Peppa Pigs from the 20th December 2010, (there are a lot of them)
+The -n option (--nopost) turns off the ffmpeg post-processing. 
 
 ./3viewdump.pl -s Peppa -a 20101220 -f peppa.rss
-will create an rss file with links to all of the Peppa Pigs from the 20th December 2010
+will create an rss file with links to the content on the 3view of all of the Peppa Pigs from the 20th December 2010
 
 Note on ffmpeg:
-SD files are easier to play if they are passed through ffmpeg, with -acodec=copy and -vodec=copy I find this makes the file easier to play.
+SD files are easier to play if they are passed through ffmpeg, with -acodec=copy and -vodec=copy I find this makes the file easier to play, turn this off with -n or --nopost.
 HD files get mangled by ffmpeg, so they are just downloaded raw. I have not found any file metadata that tells me whether a file is HD or SD, so I parse the url of the program for the string 'cofdm_8k-', SD files contain the string 'cofdm_2k-'.
 
 DONE:
