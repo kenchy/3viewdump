@@ -18,7 +18,7 @@ use File::Fetch;
 $program_name = '3viewdump';
 $copy_right = 'parts Copyright (c) 2005 Satoshi Konno';
 $script_name = '3viewdump.pl';
-$script_version = '0.2';
+$script_version = '0.4';
 
 #------------------------------
 # global variables
