@@ -152,6 +152,7 @@ while ( $retry_cnt < 2) {
 
 $devNum= 0;
 foreach $dev (@dev_list) {
+	#print Dumper $dev;
 	$device_type = $dev->getdevicetype();
 	#print "$device_type \n";
 	#print "Device type is $device_type \n";
@@ -170,13 +171,18 @@ foreach $dev (@dev_list) {
 	#@content_list = $mediaServer->getcontentlist(ObjectID => 0, RequestedCount => $requested_count);
 	#The 'folders' presented by the 3view are represented by ObjectID, 0 will return the 3 top level directories
 	#'Video' has an ObjectID of 2, 'Recorded Shows' is 21, 'By Title' is 211
-	@content_list = $mediaServer->getcontentlist(ObjectID => 21);
+	#@content_list = $mediaServer->getcontentlist(ObjectID => 21);
+	#As of Feb 9th 2011, box returns title of show as date, do the title match here....
+	@content_list = $mediaServer->getcontentlist(ObjectID => 211);
 	#print "content_list = @content_list\n";
 	foreach $content (@content_list) {
-		#print "content $content->{_title} \n";
-		#print Dumper $content;
-		if ( $content->{_title} eq 'By Program Name' ) {
-			parse_content_directory($mediaServer, $content);
+		my $act_tit = $content->{_title};
+		#print "content $act_tit \n";
+		if ($act_tit =~ m/$title_regexp/){
+		#if ( (length($title_regexp) == 0) || ($act_tit =~ m/$title_regexp/) ){
+			#print "I get here!\n";
+			#print Dumper $content;
+			parse_content_directory( $act_tit, $mediaServer, $content);
 		}
 	}
 
@@ -239,7 +245,7 @@ RSS_FOOTER
 	close(RSS_FILE);
 
 	$rss_outputted_items = @rss_content_list;
-	print "Outputed $rss_outputted_items RSS items to $output_rss_filename\n";
+	print "Outputted $rss_outputted_items RSS items to $output_rss_filename\n";
 }
 
 #------------------------------
@@ -247,27 +253,31 @@ RSS_FOOTER
 #------------------------------
 
 sub parse_content_directory {
-	($mediaServer, $content) = @_;
-	#print Dumper $content;
+	my $act_tit = shift;
+	print "$act_tit whatup \n";
+	( $mediaServer, $content) = @_;
+
 	my $objid = $content->getid();
 
 	if ($content->isitem()) {
 		#my $title = $content->gettitle();
-		my $title = $content->{_title};
+		#my $title = $content->{_title};
 		#$title =~ tr/a-zA-Z0-9/_/cd;
 		#my $date = ParseDate($content->{_date});
 		my $date = $content->{_date};
 		$date =~ tr/0-9//cd;
 		my $mime = $content->{_contenttype};
-		if ( ($mime =~ m/video/) && ( (length($title_regexp) == 0) || ($title =~ m/$title_regexp/) ) ) {
+		print "mime is: $mime ";
+		if ($mime =~ m/video/) {
 			if ((length($search_date) == 0) || ($date =~ m/$search_date/)) {
-				print "title: $title ";
+				#print "title: $title ";
 				print "mime: $mime ";
 				print "date: $date search_date $search_date\n";
 				#print Dumper $content;
+				#print Dumper $mediaServer->browsemetadata($objid);
 				my $dms_content_count = @dms_content_list;
 				if ($requested_count == 0 || $dms_content_count < $requested_count) {
-					my $mp4_content = get_content($mediaServer, $content);
+					my $mp4_content = get_content($act_tit, $mediaServer, $content);
 					if (defined($mp4_content)) {
 						push(@dms_content_list, $mp4_content);
 					}
@@ -287,7 +297,7 @@ sub parse_content_directory {
 	}
 	
 	foreach my $child_content (@child_content_list) {
-		parse_content_directory($mediaServer, $child_content);
+		parse_content_directory( $act_tit, $mediaServer, $child_content);
 	}
 }
 
@@ -296,17 +306,17 @@ sub parse_content_directory {
 #------------------------------
 
 sub get_content {
-	($mediaServer, $content) = @_;
+	($act_tit, $mediaServer, $content) = @_;
 	my $objid = $content->getid();
-	my $title = $content->gettitle();
-	$title =~ tr/a-zA-Z0-9/_/c;
+	#my $title = $content->gettitle();
+	$act_tit =~ tr/a-zA-Z0-9/_/c;
 	my $date = $content->{_date};
 	$date =~ tr/0-9//cd;
 
 	my $url = $content->geturl();
 	my $mime = $content->{_contenttype};
 	
-	#print "[$objid] $title date: $date ($url)\n";
+	print "[$objid] $act_tit date: $date ($url)\n";
 	
 	my $dev = $mediaServer->getdevice();
 	my $dev_friendlyname = $dev->getfriendlyname();
@@ -315,7 +325,7 @@ sub get_content {
 	$dev_udn =~ s/:/-/g;
 	
 	#my $filename_body = $dev_friendlyname . "_" . $dev_udn . "_" . $objid;
-	my $filename_body = $title . "_" . $date;
+	my $filename_body = $act_tit . "_" . $date;
 	$filename_body =~ s/ //g;
 	$filename_body =~ s/\//-/g;
 	
