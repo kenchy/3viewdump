@@ -330,15 +330,24 @@ sub get_content {
 	$filename_body =~ s/\//-/g;
 	
 	#my $raw_file_name = $filename_body . ".mpeg.tmp";
-	my $post_file_name = $filename_body . ".mpeg";
+	my $post_file_name;
+	my $acodec_option;
+	if ( isitHD($content)) {
+		$acodec_option="libfaac";
+		$post_file_name = $filename_body . ".mp4";
+	} else {
+		$acodec_option="libmp3lame";
+		$post_file_name = $filename_body . ".avi";
+	}
+		
 	my $output_file_name = $base_directory . $post_file_name;
+	#have patched ffmpeg to solve issues, put some jiggery in here
 
 	if ((!(-e $output_file_name))&&($rss_file eq "")) {	
 		my $ff = File::Fetch->new( uri => $url );
 		my $raw_file_name = $ff->fetch();
-		$ffmpeg_opt = "-y -i \"$raw_file_name\" -acodec copy -vcodec copy \"$output_file_name\"";
-		if (( isitHD($content))||($nopost)) {
-			#print "It is HD!!!\n";
+		$ffmpeg_opt = "-y -i \"$raw_file_name\" -acodec \"$acodec_option\" -vcodec copy \"$output_file_name\"";
+		if ($nopost) {
 			rename $raw_file_name, $output_file_name;
 		} else {
 			#print "It is  not HD!!!!\n";
