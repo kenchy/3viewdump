@@ -8,6 +8,8 @@ use Data::Dumper;
 
 use File::Fetch;
 
+#$Net::UPnP::DEBUG = 1;
+
 #curl('--version');
 #ffmpeg('-version');
 
@@ -146,7 +148,7 @@ while ( $retry_cnt < 2) {
 	@dev_list = $obj->search(st =>'upnp:rootdevice', mx => 3);
 #	@dev_list = $obj->search();
 	#print Dumper (@dev_list);
-	#print "$retry_cnt \n";
+	print "$retry_cnt \n";
 	$retry_cnt++;
 } 
 
@@ -166,6 +168,7 @@ foreach $dev (@dev_list) {
 		next;
 	}
 	print "[$devNum] : " . $dev->getfriendlyname() . "\n";
+	#print Dumper($dev);
 	$mediaServer = Net::UPnP::AV::MediaServer->new();
 	$mediaServer->setdevice($dev);
 	#@content_list = $mediaServer->getcontentlist(ObjectID => 0, RequestedCount => $requested_count);
@@ -324,48 +327,30 @@ sub get_content {
 	my $dev_udn = $dev->getudn();
 	$dev_udn =~ s/:/-/g;
 	
-	#my $filename_body = $dev_friendlyname . "_" . $dev_udn . "_" . $objid;
 	my $filename_body = $act_tit . "_" . $date;
 	$filename_body =~ s/ //g;
 	$filename_body =~ s/\//-/g;
 	
-	#my $raw_file_name = $filename_body . ".mpeg.tmp";
 	my $post_file_name;
 	my $acodec_option;
-	if ( isitHD($content)) {
-		$acodec_option="libfaac";
-		$post_file_name = $filename_body . ".mp4";
-	} else {
-		$acodec_option="libmp3lame";
-		$post_file_name = $filename_body . ".avi";
-	}
-		
-	my $output_file_name = $base_directory . $post_file_name;
-	#have patched ffmpeg to solve issues, put some jiggery in here
+	my $output_file_name = $base_directory . $filename_body . ".mp4";
 
 	if ((!(-e $output_file_name))&&($rss_file eq "")) {	
 		my $ff = File::Fetch->new( uri => $url );
 		my $raw_file_name = $ff->fetch();
-		$ffmpeg_opt = "-y -i \"$raw_file_name\" -acodec \"$acodec_option\" -vcodec copy \"$output_file_name\"";
 		if ($nopost) {
 			rename $raw_file_name, $output_file_name;
 		} else {
-			#print "It is  not HD!!!!\n";
-			print "ffmpeg $ffmpeg_opt\n";
-			ffmpeg($ffmpeg_opt);
+			if ( isitHD($content)) {
+				$ffmpeg_opt = "nice ffmpeg -y -i \"$raw_file_name\" -acodec libfaac -ac 2 -ab 128k -vcodec copy \"$output_file_name\"";
+			} else {
+				$ffmpeg_opt = "nice ffmpeg -y -i \"$raw_file_name\" -vcodec libx264 -preset slow -b:v 755k -pass 1 -an -f mp4 /dev/null && nice ffmpeg -i \"$raw_file_name\" -vcodec libx264 -preset slow -b:v 755k -pass 2 -c:a libfaac -b:a 128k \"$output_file_name\"";
+			}
+			print "$ffmpeg_opt\n";
+			system($ffmpeg_opt);
 			unlink($raw_file_name);
 		}
 	}
-		
-	#if (!(-e $output_file_name)) {	
-	#	return undef;
-	#}
-	
-	#my $post_file_size = -s $output_file_name;
-	
-	#if ($post_file_size <= 0) {
-	#	return undef;
-	#}
 		
 	my %info = (
 		'objid'     => $objid,
